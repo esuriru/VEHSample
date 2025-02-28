@@ -13,12 +13,32 @@ namespace
     void* stack_trace_buffer[100];
 }
 
+__attribute__((noinline)) void stack_overflow() 
+{
+    stack_overflow();
+}
+
 LONG CALLBACK exception_handler(PEXCEPTION_POINTERS exception_info) 
 {
+    printf("Exception caught: 0x%lX\n", 
+        exception_info->ExceptionRecord->ExceptionCode);
+
+#ifdef DEBUG
+    if (exception_info->ExceptionRecord->ExceptionCode == 
+        EXCEPTION_BREAKPOINT)
+    {
+        printf("%s", "Breakpoint caught by VEH");
+
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+    else 
     if (exception_info->ExceptionRecord->ExceptionCode == 
         EXCEPTION_ACCESS_VIOLATION) 
+#endif
     {
+#ifdef DEBUG
         printf("%s", "Access violation caught by VEH\n");
+#endif
 
         // Capture stack trace
         USHORT frames = CaptureStackBackTrace(0, 100, stack_trace_buffer, NULL);
@@ -78,13 +98,16 @@ LONG CALLBACK exception_handler(PEXCEPTION_POINTERS exception_info)
 
 int main()
 {
-    printf("%s", "Causing access violation\n");
-
     AddVectoredExceptionHandler(1, exception_handler);
 
-    // Intentional access violation
+    printf("%s", "Causing access violation\n");
+
     int* ptr = nullptr;
     *ptr = 10;
+
+    printf("%s", "Causing stack overflow\n");
+
+    stack_overflow();
 
     return 0;
 }
