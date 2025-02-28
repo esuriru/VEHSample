@@ -1,6 +1,7 @@
 add_executable(veh_sample_clang_console)
 
 target_compile_options(veh_sample_clang_console PRIVATE "-fno-exceptions")
+target_link_libraries(veh_sample_clang_console PRIVATE "dbghelp")
 target_sources(veh_sample_clang_console PRIVATE "src/main.cpp")
 
 add_custom_command(
